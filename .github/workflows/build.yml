@@ -1,23 +1,34 @@
-- name: Build Package
+name: Build ImmortalWrt APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Package
         run: |
           sudo apt update && sudo apt install -y build-essential rsync wget tar xz-utils
+          # Download SDK x86_64 untuk ImmortalWrt 25.12.0-rc2
+          wget https://downloads.immortalwrt.org/releases/25.12.0-rc2/targets/x86/64/immortalwrt-sdk-25.12.0-rc2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+          tar -xJf *.tar.xz --strip-components=1
           
-          # URL SDK diarahkan ke OpenWrt resmi (contoh arsitektur x86/64)
-          # Catatan: Jika versi 25.12.2 belum rilis stabil, gunakan snapshots
-          SDK_URL="https://downloads.openwrt.org/releases/25.12.2/targets/x86/64/openwrt-sdk-25.12.2-x86-64_gcc-14.2.0_musl.Linux-x86_64.tar.xz"
-          
-          # Jika link di atas 404, gunakan link snapshot sebagai cadangan
-          wget $SDK_URL -O sdk.tar.xz || wget https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-14.2.0_musl.Linux-x86_64.tar.xz -O sdk.tar.xz
-          
-          tar -xJf sdk.tar.xz --strip-components=1
-          
-          # Sinkronisasi folder aplikasi imei-changer
+          # Masukkan folder aplikasi ke dalam feed SDK
           mkdir -p package/luci-app-imei-changer
           cp -r $GITHUB_WORKSPACE/luci-app-imei-changer/* package/luci-app-imei-changer/
           
-          # Proses Kompilasi
+          # Proses Compile
           ./scripts/feeds update -a
           ./scripts/feeds install -a
           make defconfig
           echo "CONFIG_PACKAGE_luci-app-imei-changer=m" >> .config
           make package/luci-app-imei-changer/compile V=s
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: imei-changer-apk
+          path: bin/packages/*/base/*.apk
