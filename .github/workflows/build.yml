@@ -1,0 +1,34 @@
+name: Build ImmortalWrt APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Package
+        run: |
+          sudo apt update && sudo apt install -y build-essential rsync wget tar xz-utils
+          # Download SDK x86_64 untuk ImmortalWrt 25.12
+          wget https://downloads.immortalwrt.org/releases/25.12/targets/x86/64/immortalwrt-sdk-25.12.0-x86-64_gcc-14.2.0_musl.Linux-x86_64.tar.xz
+          tar -xJf *.tar.xz --strip-components=1
+          
+          # Masukkan folder aplikasi ke dalam feed SDK
+          mkdir -p package/luci-app-imei-changer
+          cp -r $GITHUB_WORKSPACE/luci-app-imei-changer/* package/luci-app-imei-changer/
+          
+          # Proses Compile
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
+          echo "CONFIG_PACKAGE_luci-app-imei-changer=m" >> .config
+          make package/luci-app-imei-changer/compile V=s
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: imei-changer-apk
+          path: bin/packages/*/base/*.apk
