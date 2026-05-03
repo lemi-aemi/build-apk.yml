@@ -12,7 +12,7 @@ jobs:
       - name: Build Package
         run: |
           sudo apt update && sudo apt install -y build-essential rsync wget tar zstd
-          sudo apt update && sudo apt install -y build-essential rsync wget tar xz-utils
+          
           # Download SDK x86_64 untuk ImmortalWrt 25.12.0-rc2
           wget https://downloads.immortalwrt.org/releases/25.12.0-rc2/targets/x86/64/immortalwrt-sdk-25.12.0-rc2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
           
