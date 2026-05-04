@@ -24,13 +24,13 @@ define Package/luci-app-imei-changer/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/set_imei.sh $(1)/usr/bin/set_imei
 
-	# 2. Install LuCI Menu JSON (Agar muncul di bawah kategori Modem)
+    # Mengambil langsung dari folder root jika folder files tidak ada/kosong
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
-	$(INSTALL_DATA) ./files/luci-app-imei-changer.json $(1)/usr/share/luci/menu.d/luci-app-imei-changer.json
+	$(CP) ./root/usr/share/luci/menu.d/* $(1)/usr/share/luci/menu.d/
 
-	# 3. Install RPCD ACL JSON (Izin akses untuk UI)
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(INSTALL_DATA) ./files/luci-app-imei-changer-acl.json $(1)/usr/share/rpcd/acl.d/luci-app-imei-changer.json
+	$(CP) ./root/usr/share/rpcd/acl.d/* $(1)/usr/share/rpcd/acl.d/
+
 
 	# 4. Copy file konfigurasi sistem dari folder root (jika ada)
 	if [ -d "./root" ] && [ "$$(ls -A ./root)" ]; then \
