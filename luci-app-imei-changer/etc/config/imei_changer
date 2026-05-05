@@ -1,0 +1,4 @@
+config imei_changer 'main'
+	option enabled '1'
+	option modem_port '/dev/ttyUSB2'
+	option modem_type 'quectel'
