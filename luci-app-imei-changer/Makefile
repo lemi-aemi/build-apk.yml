@@ -23,7 +23,7 @@ define Package/luci-app-imei-changer/install
 
     # Install JavaScript View (Sangat penting untuk ImmortalWrt 25.12)
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d/view/modem
-	$(INSTALL_DATA) ./files/imei_changer.js $(1)/usr/share/luci/menu.d/view/modem/imei_changer.js
+	$(INSTALL_DATA) ./files/imei_changer.js $(1)/www/luci-static/resources/view/modem/imei_changer.js
 
 	# 1. Install script backend (Tetap dari folder files jika itu lokasi scriptnya)
 	$(INSTALL_DIR) $(1)/usr/bin
