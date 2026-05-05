@@ -32,5 +32,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: imei-changer-apk
+          name: imei-changer-v1-apk
           path: bin/packages/*/base/*.apk
