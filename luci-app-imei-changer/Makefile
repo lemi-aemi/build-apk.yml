@@ -27,7 +27,7 @@ define Package/luci-app-imei-changer/install
 
 	# 1. Install script backend (Tetap dari folder files jika itu lokasi scriptnya)
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/set_imei.sh $(1)/usr/bin/set_imei
+	$(INSTALL_BIN) ./files/set_imei.sh $(1)/usr/bin/set_imei.sh
 
 	# 2. Copy seluruh struktur dari folder root
 	# Ini otomatis akan membawa usr/share/luci/menu.d/ dan usr/share/rpcd/acl.d/
