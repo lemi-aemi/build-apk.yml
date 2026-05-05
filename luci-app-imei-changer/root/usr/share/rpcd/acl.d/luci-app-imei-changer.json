@@ -1,10 +1,11 @@
 {
     "luci-app-imei-changer": {
-        "description": "Grant access to IMEI Changer",
+        "description": "Izin eksekusi IMEI Changer",
         "read": {
             "cgi-io": [ "exec" ],
             "file": {
-                "/etc/config/imei_changer": [ "read" ]
+                "/etc/config/imei_changer": [ "read" ],
+                "/usr/bin/set_imei": [ "read" ]
             },
             "ubus": {
                 "file": [ "read" ],
