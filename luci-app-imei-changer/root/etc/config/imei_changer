@@ -1,5 +1,5 @@
 config imei_changer 'main'
 	option port '/dev/ttyUSB2'
-	option cmd_check 'AT+GSN'
+	option cmd_check 'ATI'
 	option cmd_quectel 'AT+EGMR=1,7,"{imei}"'
 	option cmd_dell 'AT!NVIMEI={imei}'
