@@ -1,67 +1,55 @@
 'use strict';
-'require dom';
-'require fs';
-'require ui';
-'require uci';
-'require view';
-'require form';
+'use ui';
 
-return view.extend({
+var fs = L.require('fs');
+var uci = L.require('uci');
+
+return L.view.extend({
+    load: function() {
+        return Promise.all([
+            uci.load('imei_changer').catch(function() { return null; }),
+            L.resolveDefault(fs.list('/dev'), [])
+        ]);
+    },
+
     handleAction: function(action) {
         var log = document.getElementById('log_output');
         var modemType = document.getElementById('modem_type').value;
         var imeiVal = document.getElementById('imei_val') ? document.getElementById('imei_val').value : '';
         
-        log.style.display = '';
         log.value = "[Action] Menjalankan " + action + "...\n";
 
-        // Mengambil port dari config imei_changer via uci
-        return uci.load('imei_changer').then(function() {
-            var port = uci.get('imei_changer', 'main', 'port') || '/dev/ttyUSB2';
-            log.value += "[Info] Menggunakan port: " + port + "\n";
-            
-            var params = [action, modemType, port];
-            if (action === 'change') params.push(imeiVal);
+        var params = [action, modemType];
+        if (action === 'change') params.push(imeiVal);
 
-            return fs.exec('/usr/bin/set_imei', params);
-        }).then(function(res) {
+        return fs.exec('/usr/bin/set_imei', params).then(function(res) {
             log.value += res.stdout || res.stderr || "Proses selesai.";
         }).catch(function(e) {
-            ui.addNotification(null, E('p', [e.message]), 'error');
+            log.value += "Error: " + e.message;
         });
     },
 
-    load: function() {
-        return Promise.all([
-            uci.load('imei_changer'),
-            L.resolveDefault(fs.list('/dev'), [])
-        ]);
-    },
+    render: function(data) {
+        var dev_list = data[1] || [];
+        
+        // Buat container utama
+        var m = new L.ui.Map('imei_changer', 'IMEI Changer LemWRT', 'Konfigurasi port dan ganti IMEI modem.');
+        var s = m.section(L.ui.NamedSection, 'main', 'imei_changer');
 
-    render: function(loadResults) {
-        var dev_list = loadResults[1] || [];
-
-        // Bagian Konfigurasi (UCI Map)
-        var m = new form.Map('imei_changer', _('IMEI Changer Configuration'), _('Konfigurasi port dan perintah modem.'));
-        var s = m.section(form.NamedSection, 'main', 'imei_changer');
-
-        var o = s.option(form.ListValue, 'port', _('Modem Port'));
-        o.rmempty = false;
-        dev_list.forEach(function(dev) {
-            if (dev.name.match(/^ttyUSB|^ttyACM/)) {
-                o.value('/dev/' + dev.name);
+        // Opsi Port (Langsung muncul di atas)
+        var o = s.option(L.ui.ListValue, 'port', 'Modem Port', 'Pilih port komunikasi modem yang aktif.');
+        o.value('/dev/ttyUSB2');
+        for (var i = 0; i < dev_list.length; i++) {
+            if (dev_list[i].name.match(/^ttyUSB|^ttyACM/)) {
+                o.value('/dev/' + dev_list[i].name);
             }
-        });
+        }
 
-        s.option(form.Value, 'cmd_check', _('Command Cek IMEI'));
-        s.option(form.Value, 'cmd_quectel', _('Command Quectel'));
-        s.option(form.Value, 'cmd_dell', _('Command Dell'));
-
-        // Bagian Tool (Ganti IMEI)
+        // Section untuk Tool Ganti IMEI (Manual HTML agar tidak error library)
         var tool_node = E('div', { 'class': 'cbi-section' }, [
-            E('h3', _('IMEI Tool')),
+            E('h3', 'AT Command Tool'),
             E('div', { 'class': 'cbi-value' }, [
-                E('label', { 'class': 'cbi-value-title' }, _('Modem Type')),
+                E('label', { 'class': 'cbi-value-title' }, 'Modem Type'),
                 E('div', { 'class': 'cbi-value-field' }, [
                     E('select', { 'id': 'modem_type', 'class': 'cbi-input-select' }, [
                         E('option', { 'value': 'quectel' }, 'Quectel RM520N-GL'),
@@ -70,31 +58,31 @@ return view.extend({
                 ])
             ]),
             E('div', { 'class': 'cbi-value' }, [
-                E('label', { 'class': 'cbi-value-title' }, _('IMEI Baru')),
+                E('label', { 'class': 'cbi-value-title' }, 'IMEI Baru'),
                 E('div', { 'class': 'cbi-value-field' }, [
-                    E('input', { 'id': 'imei_val', 'type': 'text', 'class': 'cbi-input-text', 'placeholder': '15 digit IMEI' })
+                    E('input', { 'id': 'imei_val', 'type': 'text', 'class': 'cbi-input-text', 'placeholder': '15 Digit IMEI' })
                 ])
             ]),
-            E('div', { 'class': 'cbi-value' }, [
+            E('div', { 'class': 'cbi-section-create' }, [
                 E('button', { 
-                    'class': 'cbi-button cbi-button-action important',
-                    'click': ui.createHandlerFn(this, 'handleAction', 'check')
-                }, [ _('Cek Status IMEI') ]),
+                    'class': 'btn cbi-button-action important', 
+                    'click': L.bind(this.handleAction, this, 'check') 
+                }, 'Cek Status IMEI'),
                 E('button', { 
-                    'class': 'cbi-button cbi-button-save',
-                    'style': 'margin-left: 10px;',
-                    'click': ui.createHandlerFn(this, 'handleAction', 'change')
-                }, [ _('Update IMEI') ])
+                    'class': 'btn cbi-button-save', 
+                    'style': 'margin-left:10px;', 
+                    'click': L.bind(this.handleAction, this, 'change') 
+                }, 'Update IMEI Sekarang')
             ]),
-            E('textarea', {
-                'id': 'log_output',
-                'class': 'cbi-input-textarea',
-                'style': 'width:100%; height:200px; background:#000; color:#0f0; font-family:monospace; margin-top:10px; display:none;',
-                'readonly': 'readonly'
+            E('textarea', { 
+                'id': 'log_output', 
+                'class': 'cbi-input-textarea', 
+                'style': 'width:100%; height:150px; background:#000; color:#0f0; margin-top:10px; font-family:monospace; padding:10px;', 
+                'readonly': 'readonly' 
             })
         ]);
 
-        return E('div', {}, [
+        return E('div', { 'class': 'cbi-map' }, [
             m.render(),
             tool_node
         ]);
