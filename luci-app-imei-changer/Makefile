@@ -12,7 +12,7 @@ define Package/luci-app-imei-changer
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=LuCI support for IMEI Changer (RM520N & DW5821e)
-  DEPENDS:=+socat
+  DEPENDS:=+atinout
   PKGARCH:=all
 endef
 
@@ -26,21 +26,23 @@ define Package/luci-app-imei-changer/install
 	$(INSTALL_DATA) ./htdocs/luci-static/resources/view/modem/imei_changer.js $(1)/www/luci-static/resources/view/modem/imei_changer.js
 
 	# 1. Install script backend (Tetap dari folder files jika itu lokasi scriptnya)
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/set_imei.sh $(1)/usr/bin/set_imei.sh
+	$(INSTALL_DIR) $(1)/usr/bin/
+	$(INSTALL_BIN) ./files/set_imei.sh $(1)/usr/bin/set_imei
 
 	# 2. Copy seluruh struktur dari folder root
 	# Ini otomatis akan membawa usr/share/luci/menu.d/ dan usr/share/rpcd/acl.d/
 	# jika struktur folder di repositori Anda sudah benar.
-	if [ -d "./root" ] && [ "$$(ls -A ./root)" ]; then \
-		$(CP) ./root/* $(1)/; \
-	fi
+	$(INSTALL_DIR) $(1)/etc/config/
+	$(INSTALL_BIN) ./root/etc/config/imei_changer $(1)/etc/config/imei_changer
 
-	# 3. Copy file antarmuka web ke /www/
-	$(INSTALL_DIR) $(1)/www
-	if [ -d "./htdocs" ] && [ "$$(ls -A ./htdocs)" ]; then \
-		$(CP) ./htdocs/* $(1)/www/; \
-	fi
+	# 3. Copy file antarmuka web ke
+	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d/
+	$(INSTALL_BIN) ./usr/share/luci/menu.d/luci-app-imei-changer.json $(1)/usr/share/luci/menu.d/luci-app-imei-changer.json
+	
+	# 4. Copy file antarmuka web ke
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d/
+	$(INSTALL_BIN) ./usr/share/rpcd/acl.d/luci-app-imei-changer.json $(1)/usr/share/rpcd/acl.d/luci-app-imei-changer.json
+	
 endef
 
 
