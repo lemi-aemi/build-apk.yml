@@ -1,4 +1,5 @@
 config imei_changer 'main'
-	option enabled '1'
-	option modem_port '/dev/ttyUSB2'
-	option modem_type 'quectel'
+	option port '/dev/ttyUSB2'
+	option cmd_check 'AT+GSN'
+	option cmd_quectel 'AT+EGMR=1,7,"{imei}"'
+	option cmd_dell 'AT!NVIMEI={imei}'
