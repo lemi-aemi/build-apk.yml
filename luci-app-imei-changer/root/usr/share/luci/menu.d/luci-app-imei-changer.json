@@ -1,13 +1,20 @@
 {
-    "admin/modem/imei_changer": {
-        "title": "IMEI Changer",
-        "action": {
-            "type": "view",
-            "path": "modem/imei_changer"
-        },
-        "depends": {
-            "acl": [ "luci-app-imei-changer" ]
-        },
-        "order": 10
-    }
+	"luci-app-imei-changer": {
+		"description": "Izin Eksekusi IMEI Changer",
+		"read": {
+			"cgi-io": [ "exec" ],
+			"uci": [ "imei_changer" ],
+			"file": {
+				"/etc/config/imei_changer": [ "read" ],
+				"/usr/bin/set_imei": [ "read" ]
+			}
+		},
+		"write": {
+			"cgi-io": [ "exec" ],
+			"uci": [ "imei_changer" ],
+			"file": {
+				"/etc/config/imei_changer": [ "write" ]
+			}
+		}
+	}
 }
