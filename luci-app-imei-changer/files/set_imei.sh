@@ -1,17 +1,33 @@
 #!/bin/sh
 
-ACTION=$1
-MODEM=$2
-PORT=$3
-NEW_IMEI=$4
+PORT="/dev/ttyUSB2"
+MODEM_TYPE=$1
+IMEI_VALUE=$2
 
-if [ "$ACTION" = "check" ]; then
-    CMD=$(uci -q get imei_changer.main.cmd_check || echo "AT+GSN")
-    echo "$CMD" | atinout - "$PORT" -
-elif [ "$ACTION" = "change" ]; then
-    [ -z "$NEW_IMEI" ] && echo "Error: IMEI harus diisi!" && exit 1
-    TEMPLATE=$(uci -q get imei_changer.main.cmd_$MODEM)
-    FINAL_CMD=$(echo "$TEMPLATE" | sed "s/{imei}/$NEW_IMEI/g")
-    echo "Mengirim: $FINAL_CMD"
-    echo "$FINAL_CMD" | atinout - "$PORT" -
-fi
+send_at() {
+    echo "$1" > "$PORT"
+    sleep 1
+}
+
+case $MODEM_TYPE in
+    "rm520n")
+        # Referensi Anda: AT+EGMR=1,7,"IMEI"
+        send_at "AT+EGMR=1,7,\"$IMEI_VALUE\""
+        send_at "AT+CFUN=1,1"
+        ;;
+    "dw5821e")
+        # Referensi Anda: Hapus -> Restart -> Input Hex -> Restart
+        # Catatan: User harus memasukkan format HEX yang sudah jadi di UI
+        send_at "at^nv=550,\"0\""
+        send_at "at+cfun=1,1"
+        sleep 10 # Menunggu modem up kembali
+        send_at "at^nv=550,9,\"$IMEI_VALUE\""
+        send_at "at+cfun=1,1"
+        ;;
+    "cek_rm")
+        send_at "AT+GSN"
+        ;;
+    "cek_dw")
+        send_at "at^nv=550"
+        ;;
+esac
