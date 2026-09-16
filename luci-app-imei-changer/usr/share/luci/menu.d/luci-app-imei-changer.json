@@ -1,1 +1,14 @@
-1
+{
+	"admin/modem/imei_changer": {
+		"title": "IMEI Changer",
+		"order": 45,
+		"action": {
+			"type": "view",
+			"path": "modem/imei_changer"
+		},
+		"depends": {
+			"acl": [ "luci-app-imei-changer" ],
+			"uci": { "imei_changer": true }
+		}
+	}
+}
