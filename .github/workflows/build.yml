@@ -10,6 +10,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Step variabel tanggal (YYYYMMDD)
       - name: Get Current Date
         id: date
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
@@ -22,21 +23,18 @@ jobs:
           wget https://downloads.immortalwrt.org/releases/25.12.0-rc2/targets/x86/64/immortalwrt-sdk-25.12.0-rc2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
           tar -I zstd -xf *.tar.zst --strip-components=1
 
-          # Salin folder luci-app-imei-changer secara presisi
-          mkdir -p package/luci-app-imei-changer
-          rsync -av --exclude='.git' $GITHUB_WORKSPACE/luci-app-imei-changer/ package/luci-app-imei-changer/
+          # Copy folder luci-app-imei-changer dari root workspace
+          cp -r $GITHUB_WORKSPACE/luci-app-imei-changer package/
 
-          # Update Feeds & Indexing
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-          # Konfirmasi keberadaan Makefile sebelum compile
+          # Verifikasi keberadaan Makefile
           if [ ! -f package/luci-app-imei-changer/Makefile ]; then
             echo "Error: Makefile tidak ditemukan di package/luci-app-imei-changer!"
             exit 1
           fi
 
-          # Config & Compile
+          # Update Feeds & Compile
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
           make defconfig
           echo "CONFIG_PACKAGE_luci-app-imei-changer=y" >> .config
           make package/luci-app-imei-changer/compile V=s
