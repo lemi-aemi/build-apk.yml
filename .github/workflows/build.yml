@@ -50,8 +50,9 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-imei-changer=y" >> .config
           make package/luci-app-imei-changer/compile V=s
 
-      - name: Upload Artifact
+      - name: Upload Single APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: imei-changer-${{ matrix.target }}-${{ steps.date.outputs.DATE }}
-          path: bin/packages/**/*.apk
+          name: imei-changer-${{ steps.date.outputs.DATE }}
+          path: bin/packages/**/luci-app-imei-changer*.apk
+          if-no-files-found: error
