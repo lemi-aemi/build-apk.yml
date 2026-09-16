@@ -1,1 +1,50 @@
-1
+#!/bin/sh
+
+ACTION=$1
+MODEM_TYPE=$2
+PORT=$3
+IMEI=$4
+CUSTOM_CMD=$5 # Parameter ke-5 untuk AT Command manual
+
+if [ ! -e "$PORT" ]; then
+    echo "[Error] Port $PORT tidak ditemukan!"
+    exit 1
+fi
+
+send_at() {
+    stty -F "$PORT" 115200 raw -echo -echoe -echok 2>/dev/null
+    if [ -f "/usr/bin/atinout" ]; then
+        echo "$1" | atinout - "$PORT" -
+    else
+        echo -e "$1\r" > "$PORT" &
+        sleep 1
+        kill $! 2>/dev/null
+    fi
+}
+
+case "$ACTION" in
+    "check")
+        echo "[Info] Mengecek status pada $PORT..."
+        [ "$MODEM_TYPE" = "dell" ] && send_at "AT^NV=550" || send_at "ATI;+CGSN"
+        ;;
+    "update")
+        [ -z "$IMEI" ] && echo "[Error] IMEI kosong!" && exit 1
+        if [ "$MODEM_TYPE" = "dell" ]; then
+            send_at "AT^NV=550,9,\"$IMEI\""
+        else
+            send_at "AT+EGMR=1,7,\"$IMEI\""
+        fi
+        echo "[Info] Selesai. Gunakan AT Send: AT+CFUN=1,1 jika perlu restart modem."
+        ;;
+    "custom")
+        if [ -n "$CUSTOM_CMD" ]; then
+            echo "[Action] Mengirim perintah manual: $CUSTOM_CMD"
+            send_at "$CUSTOM_CMD"
+        else
+            echo "[Error] Perintah AT kosong!"
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {check|update|custom} {type} {port} [imei/cmd]"
+        ;;
+esac
