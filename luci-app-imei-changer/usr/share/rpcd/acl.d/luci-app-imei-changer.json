@@ -1,1 +1,21 @@
-1
+{
+	"luci-app-imei-changer": {
+		"description": "Izin eksekusi untuk IMEI Changer",
+		"read": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/usr/libexec/set_imei": [ "exec" ],
+				"/usr/bin/atinout": [ "exec" ]
+			},
+			"uci": [ "imei_changer" ]			
+		},
+		"write": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/usr/libexec/set_imei": [ "exec" ]
+			},
+			"uci": [ "imei_changer" ]
+		}
+		
+	}
+}
