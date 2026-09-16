@@ -38,5 +38,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           # Nama artifact zip sekarang menyertakan tanggal (contoh: imei-changer-v1-20260916)
-          name: imei-changer-${{ steps.date.outputs.DATE }}-apk
+          name: imei-changer-${{ steps.date.outputs.DATE }}
           path: bin/packages/**/*.apk
