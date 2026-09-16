@@ -11,12 +11,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: "x86-64"
-            sdk_url: "https://downloads.immortalwrt.org/releases/25.12.0-rc2/targets/x86/64/immortalwrt-sdk-25.12.0-rc2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
+          - target: "x86_64"
+            sdk_url: "https://downloads.immortalwrt.org/releases/23.05.4/targets/x86/64/immortalwrt-sdk-23.05.4-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.zst"
           - target: "mediatek-filogic"
-            sdk_url: "https://downloads.immortalwrt.org/releases/25.12.0-rc2/targets/mediatek/filogic/immortalwrt-sdk-25.12.0-rc2-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url: "https://downloads.immortalwrt.org/releases/23.05.4/targets/mediatek/filogic/immortalwrt-sdk-23.05.4-mediatek-filogic_gcc-12.3.0_musl.Linux-x86_64.tar.zst"
           - target: "ipq40xx-generic"
-            sdk_url: "https://downloads.immortalwrt.org/releases/25.12.0-rc2/targets/ipq40xx/generic/immortalwrt-sdk-25.12.0-rc2-ipq40xx-generic_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url: "https://downloads.immortalwrt.org/releases/23.05.4/targets/ipq40xx/generic/immortalwrt-sdk-23.05.4-ipq40xx-generic_gcc-12.3.0_musl.Linux-x86_64.tar.zst"
 
     steps:
       - name: Checkout Code
@@ -30,18 +30,12 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y build-essential rsync wget tar zstd
 
-          # Download & Ekstrak SDK sesuai Target Matrix
-          wget ${{ matrix.sdk_url }} -O sdk.tar.zst
+          # Download & Ekstrak SDK
+          wget -q --show-progress -L ${{ matrix.sdk_url }} -O sdk.tar.zst
           tar -I zstd -xf sdk.tar.zst --strip-components=1
 
           # Copy folder package dari root workspace
           cp -r $GITHUB_WORKSPACE/luci-app-imei-changer package/
-
-          # Verifikasi keberadaan Makefile
-          if [ ! -f package/luci-app-imei-changer/Makefile ]; then
-            echo "Error: Makefile tidak ditemukan di package/luci-app-imei-changer!"
-            exit 1
-          fi
 
           # Update Feeds & Compile
           ./scripts/feeds update -a
@@ -50,9 +44,15 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-imei-changer=y" >> .config
           make package/luci-app-imei-changer/compile V=s
 
-      - name: Upload Single APK Artifact
+      # Step untuk merename & memindahkan file APK agar bersih tanpa struktur folder
+      - name: Prepare Single APK File
+        run: |
+          mkdir -p output_apk
+          ORIGINAL_APK=$(find bin/packages/ -name "luci-app-imei-changer*.apk" | head -n 1)
+          cp "$ORIGINAL_APK" output_apk/luci-app-imei-changer_${{ matrix.target }}_${{ steps.date.outputs.DATE }}.apk
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: imei-changer-${{ steps.date.outputs.DATE }}
-          path: bin/packages/**/luci-app-imei-changer*.apk
-          if-no-files-found: error
+          name: luci-app-imei-changer-${{ matrix.target }}-${{ steps.date.outputs.DATE }}
+          path: output_apk/*.apk
