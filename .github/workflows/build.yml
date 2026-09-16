@@ -10,6 +10,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Step untuk membuat variabel tanggal (YYYYMMDD)
+      - name: Get Current Date
+        id: date
+        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
       - name: Build Package
         run: |
           sudo apt update && sudo apt install -y build-essential rsync wget tar zstd
@@ -32,5 +37,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: imei-changer-v1-apk
+          # Nama artifact zip sekarang menyertakan tanggal (contoh: imei-changer-v1-20260916)
+          name: imei-changer-${{ steps.date.outputs.DATE }}-apk
           path: bin/packages/**/*.apk
