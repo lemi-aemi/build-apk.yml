@@ -12,11 +12,11 @@ jobs:
       matrix:
         include:
           - target: "x86_64"
-            sdk_url: "https://downloads.immortalwrt.org/releases/23.05.4/targets/x86/64/immortalwrt-sdk-23.05.4-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url: "https://downloads.immortalwrt.org/releases/25.12.2/targets/x86/64/immortalwrt-sdk-25.12.2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
           - target: "mediatek-filogic"
-            sdk_url: "https://downloads.immortalwrt.org/releases/23.05.4/targets/mediatek/filogic/immortalwrt-sdk-23.05.4-mediatek-filogic_gcc-12.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url: "https://downloads.immortalwrt.org/releases/25.12.2/targets/mediatek/filogic/immortalwrt-sdk-25.12.2-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
           - target: "ipq40xx-generic"
-            sdk_url: "https://downloads.immortalwrt.org/releases/23.05.4/targets/ipq40xx/generic/immortalwrt-sdk-23.05.4-ipq40xx-generic_gcc-12.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url: "https://downloads.immortalwrt.org/releases/25.12.2/targets/ipq40xx/generic/immortalwrt-sdk-25.12.2-ipq40xx-generic_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
 
     steps:
       - name: Checkout Code
@@ -30,7 +30,7 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y build-essential rsync wget tar zstd
 
-          # Download & Ekstrak SDK
+          # Download & Ekstrak SDK ImmortalWrt 25.12.2
           wget -q --show-progress -L ${{ matrix.sdk_url }} -O sdk.tar.zst
           tar -I zstd -xf sdk.tar.zst --strip-components=1
 
@@ -44,7 +44,7 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-imei-changer=y" >> .config
           make package/luci-app-imei-changer/compile V=s
 
-      # Step untuk merename & memindahkan file APK agar bersih tanpa struktur folder
+      # Memindahkan file APK ke folder terpisah & rename
       - name: Prepare Single APK File
         run: |
           mkdir -p output_apk
