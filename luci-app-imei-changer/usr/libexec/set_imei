@@ -4,9 +4,9 @@ ACTION=$1
 MODEM_TYPE=$2
 PORT=$3
 IMEI=$4
-CUSTOM_CMD=$5 # Parameter ke-5 untuk AT Command manual
+CUSTOM_CMD=$5 # Parameter ke-5 untuk AT Command / Nama File Backup
 
-if [ ! -e "$PORT" ]; then
+if [ "$ACTION" != "list_backups" ] && [ "$ACTION" != "load_backup" ] && [ ! -e "$PORT" ]; then
     echo "[Error] Port $PORT tidak ditemukan!"
     exit 1
 fi
@@ -44,7 +44,43 @@ case "$ACTION" in
             echo "[Error] Perintah AT kosong!"
         fi
         ;;
+    "cfun")
+        echo "[Action] Mengirim perintah restart modem: AT+CFUN=1,1 pada $PORT"
+        send_at "AT+CFUN=1,1"
+        ;;
+    "backup")
+        echo "[Action] Mengambil Backup IMEI dari modem $PORT..."
+        TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
+        if [ "$MODEM_TYPE" = "dell" ]; then
+            IMEI_OUT=$(send_at "AT^NV=550")
+        else
+            IMEI_OUT=$(send_at "AT+CGSN")
+        fi
+        
+        DETECTED_IMEI=$(echo "$IMEI_OUT" | grep -oE '[0-9]{15}' | head -n 1)
+        if [ -n "$DETECTED_IMEI" ]; then
+            mkdir -p /etc/config/imei_backups
+            echo "$DETECTED_IMEI" > "/etc/config/imei_backups/backup_${TIMESTAMP}.txt"
+            echo "[OK] IMEI Terdeteksi: $DETECTED_IMEI"
+            echo "[OK] Berhasil disimpan di: /etc/config/imei_backups/backup_${TIMESTAMP}.txt"
+        else
+            echo "[Error] Gagal membaca IMEI dari output modem:"
+            echo "$IMEI_OUT"
+        fi
+        ;;
+    "list_backups")
+        mkdir -p /etc/config/imei_backups
+        ls -1 /etc/config/imei_backups/*.txt 2>/dev/null
+        ;;
+    "load_backup")
+        FILE_PATH="/etc/config/imei_backups/$CUSTOM_CMD"
+        if [ -f "$FILE_PATH" ]; then
+            cat "$FILE_PATH" | grep -oE '[0-9]{15}' | head -n 1
+        else
+            echo "[Error] File backup tidak ditemukan!"
+        fi
+        ;;
     *)
-        echo "Usage: $0 {check|update|custom} {type} {port} [imei/cmd]"
+        echo "Usage: $0 {check|update|custom|cfun|backup|list_backups|load_backup} {type} {port} [imei/cmd]"
         ;;
 esac
