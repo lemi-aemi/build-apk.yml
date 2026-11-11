@@ -131,13 +131,15 @@ return view.extend({
                     ])
                 ]),
 
-                // Dropdown Restore Backup IMEI
+                // Dropdown Select IMEI Backup
                 E('div', { 'class': 'cbi-value' }, [
                     E('label', { 'class': 'cbi-value-title' }, 'Pilih Backup IMEI'),
                     E('div', { 'class': 'cbi-value-field', 'style': 'display: flex; gap: 8px; align-items: center;' }, [
                         E('select', { 'id': 'backup_select', 'class': 'cbi-input-select', 'style': 'flex: 1;' }, 
                             backupFiles.length > 0 ? backupFiles.map(function(file) {
-                                return E('option', { 'value': file.name }, file.name);
+                                // Menampilkan nama tanpa .txt di UI
+                                var cleanName = file.name.replace(/\.txt$/, '');
+                                return E('option', { 'value': file.name }, cleanName);
                             }) : [ E('option', { 'value': '' }, '-- Tidak ada file backup --') ]
                         ),
                         E('button', {
