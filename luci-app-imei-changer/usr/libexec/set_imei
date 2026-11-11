@@ -50,7 +50,6 @@ case "$ACTION" in
         ;;
     "backup")
         echo "[Action] Mengambil Backup IMEI dari modem $PORT..."
-        TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
         if [ "$MODEM_TYPE" = "dell" ]; then
             IMEI_OUT=$(send_at "AT^NV=550")
         else
@@ -60,9 +59,10 @@ case "$ACTION" in
         DETECTED_IMEI=$(echo "$IMEI_OUT" | grep -oE '[0-9]{15}' | head -n 1)
         if [ -n "$DETECTED_IMEI" ]; then
             mkdir -p /etc/config/imei_backups
-            echo "$DETECTED_IMEI" > "/etc/config/imei_backups/backup_${TIMESTAMP}.txt"
+            # Menyimpan file dengan nama Nomor IMEI.txt
+            echo "$DETECTED_IMEI" > "/etc/config/imei_backups/${DETECTED_IMEI}.txt"
             echo "[OK] IMEI Terdeteksi: $DETECTED_IMEI"
-            echo "[OK] Berhasil disimpan di: /etc/config/imei_backups/backup_${TIMESTAMP}.txt"
+            echo "[OK] Berhasil disimpan di: /etc/config/imei_backups/${DETECTED_IMEI}.txt"
         else
             echo "[Error] Gagal membaca IMEI dari output modem:"
             echo "$IMEI_OUT"
